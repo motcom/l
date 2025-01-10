@@ -1,0 +1,8 @@
+[package]
+name = "l"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4"
+term_size = "0.3.2"
