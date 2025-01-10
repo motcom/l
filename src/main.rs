@@ -6,8 +6,9 @@ use term_size;
 // Debug Space --------------------------
 fn debug_exec()
 {
-   println!("debug");
+
 }
+
 // --------------------------------------
 
 fn main() {
@@ -118,7 +119,7 @@ fn main_exec()
 }
 
 ///　再帰的にファイルを取得
-///   
+///  -r option用
 /// # Arguments
 /// * `path` - ファイルパス
 ///
@@ -128,11 +129,23 @@ fn get_recursive_files(path:String)-> Vec<String>{
 
    let mut files = Vec::<String>::new();
    fn get_recursive_func(path:String, files:&mut Vec<String>){
-      let entries = std::fs::read_dir(path)
-         .expect("Error: ディレクトリの読み込みに失敗");
+
+      let entries;
+      if let Ok(ent) = std::fs::read_dir(&path){
+         entries = ent;
+      }else{
+         println!("Error: 次のパスでディレクトリの読み込みに失敗");
+         println!("Error: {}",
+            &path);
+         return;
+      }
+
       for entry in entries {
+
          let entry = entry
             .expect("Error: エントリーの取得に失敗");
+
+
          if entry.path().is_dir(){
            get_recursive_func(entry.path().to_string_lossy().to_string(),files) 
          }
@@ -149,6 +162,7 @@ fn get_recursive_files(path:String)-> Vec<String>{
 }
 
 /// ファイル名のみを取得
+/// option無しの場合の表示用
 ///
 /// # Arguments
 /// * `path` - ファイルパス
@@ -172,6 +186,7 @@ fn ceil_path(path:String)-> String{
 }
 
 /// ファイル一覧をフルパスで取得
+/// -f option用
 /// # Arguments
 /// * `dir` - ディレクトリ
 ///
@@ -180,8 +195,9 @@ fn ceil_path(path:String)-> String{
 fn get_dir_files(dir:String) -> Vec<String> {
    let mut files = Vec::new();
 
+
    let entries = std::fs::read_dir(dir)
-      .expect("Error:  ディレクトリの読み込みに失敗");
+      .expect("Error: ディレクトリの読み込みに失敗");
 
    for entry in entries {
       let entry = entry
@@ -197,6 +213,7 @@ fn get_dir_files(dir:String) -> Vec<String> {
 }
 
 /// カレントディレクトリの取得
+/// -p 以外の共通処理
 /// # Returns
 /// * `String` - カレントディレクトリ
 fn get_current_dir() -> String {
@@ -222,6 +239,8 @@ fn get_term_width() -> Result<i32,()> {
 }
 
 /// 文字列ベクターの最大長を取得
+/// -w option用
+///
 /// # Arguments
 /// * `strings` - 文字列ベクタ
 ///
@@ -237,10 +256,11 @@ fn get_string_max_length(strings:&Vec<String>)-> i32{
 }
 
 /// ワイド表示
+/// -w option用
+///
 /// # Arguments
 /// * `file_name_lst` - ファイル名リスト
 /// * `width` - 幅
-
 fn wide_line_print(file_name_lst:&Vec<String>,width:i32){
 
    /// ワイド表示時のスペース
