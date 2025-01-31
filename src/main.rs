@@ -1,21 +1,10 @@
-const DEBUG: bool = false;
 use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
 use term_size;
-
-// Debug Space --------------------------
-fn debug_exec()
-{
-
-}
 
 // --------------------------------------
 
 fn main() {
-    if DEBUG {
-        debug_exec();
-    } else {
         main_exec();
-    }
 }
 
 /// mainの実行
@@ -60,7 +49,7 @@ fn main_exec() {
     // カレントディレクトリの取得
     let serch_dir = matches
         .get_one::<String>("path")
-        .map_or_else(|| get_current_dir(), |path| path.clone());
+        .map_or(get_current_dir(), |path| path.clone());
 
     if std::path::Path::new(&serch_dir).exists() == false {
         println!("{}", "Error: パスが存在しません");
