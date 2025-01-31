@@ -3,9 +3,11 @@ use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
 use term_size;
 
 // Debug Space --------------------------
-fn debug_exec() {
-    println!("debug");
+fn debug_exec()
+{
+
 }
+
 // --------------------------------------
 
 fn main() {
@@ -110,32 +112,48 @@ fn main_exec() {
 }
 
 ///　再帰的にファイルを取得
-///   
+///  -r option用
 /// # Arguments
 /// * `path` - ファイルパス
 ///
 /// # Returns
 /// * `Vec<String>` - ファイル一覧
 fn get_recursive_files(path: String) -> Vec<String> {
-    let mut files = Vec::<String>::new();
-    fn get_recursive_func(path: String, files: &mut Vec<String>) {
-        let entries = std::fs::read_dir(path).expect("Error: ディレクトリの読み込みに失敗");
-        for entry in entries {
-            let entry = entry.expect("Error: エントリーの取得に失敗");
-            if entry.path().is_dir() {
-                get_recursive_func(entry.path().to_string_lossy().to_string(), files)
-            }
+   let mut files = Vec::<String>::new();
+   fn get_recursive_func(path:String, files:&mut Vec<String>){
 
-            let path = entry.path();
-            let path = path.to_str().expect("Error: パスから文字列への変換に失敗");
-            files.push(path.to_string());
-        }
-    }
-    get_recursive_func(path, &mut files);
-    files
+      let entries;
+      if let Ok(ent) = std::fs::read_dir(&path){
+         entries = ent;
+      }else{
+         println!("Error: 次のパスでディレクトリの読み込みに失敗");
+         println!("Error: {}",
+            &path);
+         return;
+      }
+
+      for entry in entries {
+
+         let entry = entry
+            .expect("Error: エントリーの取得に失敗");
+
+
+         if entry.path().is_dir(){
+           get_recursive_func(entry.path().to_string_lossy().to_string(),files) 
+         }
+
+         let path = entry.path();
+         let path = path.to_str()
+            .expect("Error: パスから文字列への変換に失敗");
+         files.push(path.to_string());
+      }
+   }
+   get_recursive_func(path, &mut files);
+   files
 }
 
 /// ファイル名のみを取得
+/// option無しの場合の表示用
 ///
 /// # Arguments
 /// * `path` - ファイルパス
@@ -162,6 +180,7 @@ fn ceil_path(path: String) -> String {
 }
 
 /// ファイル一覧をフルパスで取得
+/// -f option用
 /// # Arguments
 /// * `dir` - ディレクトリ
 ///
@@ -184,6 +203,7 @@ fn get_dir_files(dir: String) -> Vec<String> {
 }
 
 /// カレントディレクトリの取得
+/// -p 以外の共通処理
 /// # Returns
 /// * `String` - カレントディレクトリ
 fn get_current_dir() -> String {
@@ -208,6 +228,8 @@ fn get_term_width() -> Result<i32, ()> {
 }
 
 /// 文字列ベクターの最大長を取得
+/// -w option用
+///
 /// # Arguments
 /// * `strings` - 文字列ベクタ
 ///
@@ -223,16 +245,16 @@ fn get_string_max_length(strings: &Vec<String>) -> i32 {
 }
 
 /// ワイド表示
+/// -w option用
+///
 /// # Arguments
 /// * `file_name_lst` - ファイル名リスト
 /// * `width` - 幅
-
 fn wide_line_print(file_name_lst: &Vec<String>, width: i32) {
     /// ワイド表示時のスペース
-    const WIDE_ADD_SPACE: i32 = 4;
+    const WIDE_ADD_SPACE: i32 = 3;
     let max_filename_length = get_string_max_length(&file_name_lst) + WIDE_ADD_SPACE;
     let separate_nums = width / max_filename_length;
-
     file_name_lst.iter().enumerate().for_each(|(i, file_name)| {
         // iがseparate_numsの倍数の時に改行
         if i % separate_nums as usize == 0 {
