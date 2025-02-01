@@ -1,22 +1,9 @@
-const DEBUG:bool = false;
 use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
 use term_size;
-
-
-// Debug Space --------------------------
-fn debug_exec()
-{
-
-}
-
-// --------------------------------------
+use tokio::fs;
 
 fn main() {
-   if DEBUG {
-      debug_exec();
-   }else {
-      main_exec();
-   }
+   main_exec();
 }
 
 
@@ -71,8 +58,6 @@ fn main_exec()
       return;
    }
 
-   
-
    //　引数による条件分岐
    let is_full      = matches.get_flag("full") ;
    let is_recursive = matches.get_flag("recursive") ;
@@ -125,39 +110,9 @@ fn main_exec()
 ///
 /// # Returns
 /// * `Vec<String>` - ファイル一覧
-fn get_recursive_files(path:String)-> Vec<String>{
 
-   let mut files = Vec::<String>::new();
-   fn get_recursive_func(path:String, files:&mut Vec<String>){
-
-      let entries;
-      if let Ok(ent) = std::fs::read_dir(&path){
-         entries = ent;
-      }else{
-         println!("Error: 次のパスでディレクトリの読み込みに失敗");
-         println!("Error: {}",
-            &path);
-         return;
-      }
-
-      for entry in entries {
-
-         let entry = entry
-            .expect("Error: エントリーの取得に失敗");
-
-
-         if entry.path().is_dir(){
-           get_recursive_func(entry.path().to_string_lossy().to_string(),files) 
-         }
-
-         let path = entry.path();
-         let path = path.to_str()
-            .expect("Error: パスから文字列への変換に失敗");
-         files.push(path.to_string());
-      }
-
-   }
-   get_recursive_func(path, &mut files);
+async fn get_recursive_func(path:String, files:Vec<String>){
+   let mut entries;
    files
 }
 
@@ -175,14 +130,11 @@ fn ceil_path(path:String)-> String{
       let dir_name = path.file_name().expect("Error: ファイル名の取得に失敗")
          .to_string_lossy().to_string();
       return format!("[{}]",dir_name); 
-      
    } else{
-   
    let file_name = path.file_name().expect("Error:　ファイル名の取得に失敗")
       .to_string_lossy().to_string();
       return file_name 
    }
-
 }
 
 /// ファイル一覧をフルパスで取得
@@ -194,7 +146,6 @@ fn ceil_path(path:String)-> String{
 /// * `Vec<String>` - ファイル一覧
 fn get_dir_files(dir:String) -> Vec<String> {
    let mut files = Vec::new();
-
 
    let entries = std::fs::read_dir(dir)
       .expect("Error: ディレクトリの読み込みに失敗");
@@ -262,7 +213,6 @@ fn get_string_max_length(strings:&Vec<String>)-> i32{
 /// * `file_name_lst` - ファイル名リスト
 /// * `width` - 幅
 fn wide_line_print(file_name_lst:&Vec<String>,width:i32){
-
    /// ワイド表示時のスペース
    const WIDE_ADD_SPACE:i32 = 4;
    let max_filename_length = get_string_max_length(&file_name_lst) + WIDE_ADD_SPACE;
