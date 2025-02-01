@@ -1,12 +1,13 @@
-{
-  "configurations": {
-    "launch": {
-      "adapter": "CodeLLDB",
-      "filetypes": [ "rust" ],
-      "configuration": {
-        "request": "launch",
-        "program": "${workspaceRoot}/target/debug/ls.exe"
-      }
-    }
-  }
-}
+   {
+     "configurations": {
+       "launch": {
+         "adapter": "CodeLLDB",
+         "filetypes": [ "rust" ],
+         "configuration": {
+           "request": "launch",
+           "program": "${workspaceRoot}/target/debug/l.exe"
+         }
+       }
+     }
+   }
+   
