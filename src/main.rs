@@ -1,13 +1,12 @@
 use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
 use term_size;
-use std::sync::{Arc,Mutex};
 use rayon::prelude::*;
-use std::path::PathBuf;
-use std::fs;
-
+use walkdir::WalkDir;
+use std::thread;
+use std::sync::mpsc::{channel,Receiver};
 
 fn main() {
-   main_exec();
+    main_exec();
 }
 
 /// mainの実行
@@ -67,9 +66,9 @@ fn main_exec() {
     match (is_recursive, is_full, is_wide) {
         (true, false, false) => {
             // ls -r
-            let files = get_recursive_files(serch_dir);
-            for file in files {
-                println!("{}", file);
+            let rx_itr = get_recursive_files(serch_dir);
+            for it in rx_itr {
+               println!("{}",it);
             }
         }
         (false, true, false) => {
@@ -110,45 +109,18 @@ fn main_exec() {
 ///
 /// # Returns
 /// * `Vec<String>` - ファイル一覧
-fn get_recursive_files(path: String) ->Vec<String> {
-   let files  = Arc::new(Mutex::new(Vec::<String>::new()));
-   fn get_recursive_func(path :String,files :&Arc<Mutex<Vec<String>>>){
-      let entries = match fs::read_dir(&path) {
-         Ok(ent) => ent,
-         Err(_) => {println!("Error:次のパスでファイル読み込み失敗:{}",&path);
-                     return;
-         }
-      };
+fn get_recursive_files(path: String) ->Receiver<String> {
+    let (tx,rx) = channel();
+    thread::spawn(move || {
+      WalkDir::new(path).into_iter()
+         .par_bridge()
+         .filter_map(|m|m.ok())
+         .filter_map(|m|m.path().canonicalize().ok())
+         .map(|m|m.to_string_lossy().into_owned().replace(r"\\?\",""))
+         .for_each(|p| {let _ = tx.send(p);});
+   });
 
-      let entries:Vec<PathBuf> = entries
-         .filter_map(
-            |entry|
-               entry.ok()
-               .map(|ent|
-                  ent.path()))
-         .collect();
-
-      //rayonパラレルループ
-      entries.par_iter().for_each(|entry|{
-         if entry.is_dir(){
-           get_recursive_func(entry.to_string_lossy().to_string(),&files);
-         }
-
-         let path = entry.to_str()
-            .expect("Error: パスから文字列への変換に失敗");
-
-         {
-            let mut fp = files.lock().unwrap();
-            fp.push(path.to_string());
-         }
-      });
-   }
-   get_recursive_func(path, &files);
-
-   Arc::try_unwrap(files)
-      .expect("Arcを解除できませんでした")
-      .into_inner()
-      .expect("Mutexを解除できませんでした")
+   rx
 }
 
 /// ファイル名のみを取得
