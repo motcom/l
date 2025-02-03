@@ -116,6 +116,7 @@ fn get_recursive_files(path: String) ->Receiver<String> {
          .par_bridge()
          .filter_map(|m|m.ok())
          .filter_map(|m|m.path().canonicalize().ok())
+         .filter(|m|m.is_file())
          .map(|m|m.to_string_lossy().into_owned().replace(r"\\?\",""))
          .for_each(|p| {let _ = tx.send(p);});
    });
